@@ -1,6 +1,6 @@
 # Analysis-Portfolio
 
-This repository has a collection of my analysis work including projects and research about applications. The files in the repo can be categorized into three sections. Here is a brief description of each of the files
+This repository has a collection of my analysis work including projects and research about applications of data analysis in various industries. The files in the repo can be categorized into three sections. Here is a brief description of each of the files in the sections for your viewing convenience.
 
 # Case Studies
 New age farming with data - Case study about Agrilyst, an analytics platform that collects farming data and empowers farmers to increase their yield by providing them customized recommendations
