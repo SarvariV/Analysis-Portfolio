@@ -20,5 +20,8 @@ Movie Revenue Prediction - Through this analysis, I examine the possibility of p
 
 # Miscellaneous
 Python Web Scraper - A scraper to pull metrics for counties in LA
-Python Collaborative Filter
+
+Python Collaborative Filtering - An example of a recommendation system algorithm that predicts which book a user is likely to be interested in based on previously rated books
+
+Exploring Olympics Data - One of my first analysis and visualizations, where I derive insights from 7 years of data from the Olympics games to derive insights like European and North American countries have a greater number of older athletes winning medals. We can explore the factors like healthcare, diet, physical traits of athletes from different nations as well as nature of sports they contest in to understand why older athletes in some countries perform better than others
 
