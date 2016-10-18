@@ -1,0 +1,144 @@
+import codecs
+from math import sqrt
+
+
+def loadBookDB(path):
+            """loads the BX book dataset. Path is where the BX files are
+            located"""
+            data = {}
+            
+            i = 0
+            #
+            # First load book ratings into self.data
+            #
+            f = codecs.open(path + "BX-Book-Ratings.csv",'r', 'utf8')
+            for line in f:
+                i += 1
+                #separate line into fields
+                fields = line.split(';')
+                user = fields[0].strip('"')
+                book = fields[1].strip('"')
+                rating = int(fields[2].strip().strip('"'))
+                if user in data:
+                    currentRatings = data[user]
+                else:
+                    currentRatings = {}
+                currentRatings[book] = rating
+                data[user] = currentRatings
+            print(i)
+            return data
+
+            f.close()
+            #
+            # Now load books into self.productid2name
+            # Books contains isbn, title, and author among other fields
+            #
+            
+def loadProductDB(path):
+
+            f = codecs.open(path + "BX-Books.csv", 'r', 'utf8')
+            productid2name = {}
+            i = 0
+            for line in f:
+                #separate line into fields
+                i += 1
+                fields = line.split(';')
+                isbn = fields[0].strip('"')
+                title = fields[1].strip('"')
+                author = fields[2].strip().strip('"')
+                title = title + ' by ' + author
+                productid2name[isbn] = title
+            print(i)
+            return productid2name
+            f.close()
+          
+            
+data = loadBookDB('C:/Users/sony/Desktop/BX-Dump/BX-Dump/')
+productid2name = loadProductDB('C:/Users/sony/Desktop/BX-Dump/BX-Dump/')
+            
+
+class recommender:
+
+    def __init__(self, data,productid2name, k=1, n = 5):
+        """ initialize recommender
+        currently, if data is dictionary the recommender is initialized
+        to it.
+        For all other data types of data, no initialization occurs
+        k is the k value for k nearest neighbor
+        metric is which distance formula to use
+        n is the maximum number of recommendations to make"""
+        self.k = k
+      
+        self.productid2name = productid2name
+        # for some reason I want to save the name of the metric
+       
+        #
+        # if data is dictionary set recommender data to it
+        #
+        if type(data).__name__ == 'dict':
+            self.data = data
+            
+    def pearson(self,rating1,rating2):
+            n = 0
+            sum_x = 0
+            sum_y = 0
+            sum_xy = 0
+            sum_x2 = 0
+            sum_y2 = 0
+            for artist in rating1:
+                if artist in rating2:
+                    n +=1
+                    sum_x += rating1[artist]
+                    sum_y += rating2[artist]
+                    sum_xy += rating1[artist]*rating2[artist]
+                    sum_x2 += rating1[artist]**2
+                    sum_y2 += rating2[artist]**2
+            if n == 0:
+                return 0
+            den1 = sqrt(sum_x2 - sum_x**2/n)*sqrt(sum_y2 - sum_y**2/n)
+            if den1==0:
+                return 0
+            else:
+                
+            
+                return (sum_xy - (sum_x*sum_y)/n)/(den1)    
+        
+        
+    def computenearestneighbor(self,user):
+            distances =[]
+            for otheruser in self.data:
+                if otheruser!=user:
+                    distance = self.pearson(self.data[otheruser],self.data[user])
+                    distances.append((otheruser,distance))
+                    distances.sort(key=lambda artistTuple: artistTuple[1],
+                           reverse=True)
+            return distances 
+    
+    def convertProductID2name(self, id):
+            """Given product id number return product name"""
+            if id in self.productid2name:
+                return self.productid2name[id]
+            else:
+                return id  
+                
+    def recommend(self,user):
+            recommendations = {}
+            nearest = self.computenearestneighbor(user)
+            userratings = self.data[user]
+            totaldistance = 0.0
+            for i in range(self.k):
+                totaldistance += nearest[i][1]
+            for i in range(self.k):
+                nuserratings = self.data[nearest[i][0]]
+                weight = nearest[i][1]/totaldistance
+                for artist in nuserratings:
+                    if not artist in userratings:
+                        if not artist in recommendations:
+                            recommendations[artist] = nuserratings[artist] *weight
+                        else:
+                            recommendations[artist] = (recommendations[artist] +nuserratings[artist] *weight)
+                    
+            recommendations = list(recommendations.items())
+            recommendations = [(self.convertProductID2name(k), v) for (k, v) in recommendations]
+            recommendations.sort(key = lambda artistTuple: artistTuple[1], reverse = True)
+            return recommendations[:self.n]            
