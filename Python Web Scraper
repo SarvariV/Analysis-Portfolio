@@ -1,0 +1,92 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 15 18:00:31 2016
+
+@author: sony
+"""
+
+
+
+import sys, requests, bs4,re,csv
+import time
+html = requests.get('http://www.city-data.com/city/California.html')
+html.raise_for_status()
+
+
+soup = bs4.BeautifulSoup(html.content)
+table = soup.find('table', attrs={'class':'tabBlue tblsort tblsticky'})
+rows = table.findAll("tr")
+if len(soup.findAll('th')) > 0:
+        rows = rows[1:]
+allnames = []
+for row in rows:
+    cells = row.findAll('td')
+    allnames.append(cells[1].find('a').get('href'))
+#print name
+
+htmlnames = []
+for city in allnames:
+    if '.html' in city:
+        htmlnames.append(city)
+#print len(htmlnames)
+
+final = []
+
+for name in htmlnames:
+    percentages = []
+    time.sleep(30)
+
+    res = requests.get('http://www.city-data.com/city/'+name)
+    res.raise_for_status()
+    soup = bs4.BeautifulSoup(res.content)
+    title = soup.find(attrs ={'class':'city'})
+    
+    
+    title= title.get_text().replace(", California", "")
+    percentages.append(title)
+    
+    
+    population = soup.find(attrs = {'class':'city-population'})
+    #print population.get_text()
+    try:
+        popchange = re.findall(r'[+-]\d+.\d%', population.get_text())
+        #print popchange[0] 
+        percentages.append(popchange[0])
+    except:
+        print 'Could not find population'
+        percentages.append('')
+    
+    
+    poverty = soup.find(attrs = {'class':'poverty-level'})
+    #print poverty.get_text()
+    try:    
+        povertylvl = re.findall(r'\d+.\d*%', poverty.get_text())
+        #print povertylvl[0]
+        percentages.append(povertylvl[0])
+    except:
+        print 'Could not find poverty level'
+        percentages.append('')
+        
+    #print percentages
+
+    
+    
+    
+    final.append(percentages)
+    
+#print final
+
+with open("testoutput2.csv","wb") as f:
+    writer = csv.writer(f)
+    writer.writerows(final)
+
+
+
+
+
+
+
+
+
+  
+    
