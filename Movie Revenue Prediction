@@ -1,0 +1,257 @@
+
+library(dplyr)
+library(ggplot)
+
+data = read.csv("model.csv")
+
+
+
+
+# Univariate Analysis : Numerical Data
+
+
+
+ggplot(data, aes(x = Revenue))+geom_histogram()
+ggplot(data, aes(x = Budget))+geom_histogram()
+ggplot(data, aes(x = duration))+geom_histogram()
+ggplot(data, aes(x = C_Actor))+geom_histogram()
+ggplot(data, aes(x = O_Actor))+geom_histogram()
+
+
+# Univariate Analysis : Categorical Data
+
+
+
+ggplot(data, aes(x = category))+geom_bar()+coord_flip()
+ggplot(data, aes(x = rating))+geom_bar()+coord_flip()
+
+ggplot(data, aes(x = factor(C_Director)))+geom_bar(width = 0.5)
+
+
+# Bivariate Analysis : Numerical Data
+
+ggplot(data, aes(x = Budget, y = Revenue))+geom_point()
+
+# assessing linearity removing the outliers
+
+data2 = data[data$Revenue < 2000,]
+
+ggplot(data2, aes(x = Budget, y = Revenue))+geom_point()
+
+ggplot(data, aes(x = duration, y = Revenue))+geom_point()
+
+# removing movies with less than 50 mins duration and revenue = 0
+
+data3 = data[data$duration > 50 & data$Revenue < 2000,]
+
+ggplot(data3, aes(x = duration, y = Revenue))+geom_point()
+
+ggplot(data, aes(x = C_Actor, y = Revenue))+geom_point()
+
+data4 = data[data$C_Actor < 40,]
+
+ggplot(data4, aes(x = C_Actor, y = Revenue))+geom_point()
+
+ggplot(data4, aes(x = O_Actor, y = Revenue))+geom_point()
+
+
+
+
+The outlier in the C_Actors with 46 celebrity actors is the movie
+"The Player" which had cameo appereances by about 60 hollywood celebrities. We can assume this is an extreme case and hence get rid of this data point
+
+# Bivariate Analysis : Categorical Data
+
+
+cat = data%>%
+  group_by(category)%>%
+  summarize(avg = mean(Revenue))%>%
+  arrange(desc(avg))
+cat
+
+rat = data%>%
+  group_by(rating)%>%
+  summarize(avg = mean(Revenue))%>%
+  arrange(desc(avg))
+rat
+
+ggplot(cat, aes(x = reorder(category,avg), y = avg))+
+  geom_bar(stat = "identity")+
+  coord_flip()+xlab("Genre")+ylab("Avg Revenue")
+
+ggplot(rat, aes(x = reorder(rating,avg), y = avg))+
+  geom_bar(stat = "identity")+
+  coord_flip()+xlab("Rating")+ylab("Avg Revenue")
+
+
+
+Data cleaning : Removing data points with duration less than 50 as these are short animated films with no data about budget and revenue
+
+data = data[data$duration > 50 & data$C_Actor < 40,]
+
+# Creating training and testing set
+
+
+test = subset(data, year >= 2010)
+train = subset(data, year < 2010)
+
+
+Manual Model Building and Evaluation
+
+
+model1 = lm(Revenue ~ Budget+category+duration+rating+C_Director+C_Actor+O_Actor, data = train)
+summary(model1)
+
+pred1 = predict(model1, train)
+resid1 = train$Revenue - pred1
+res = resid(model1)
+
+plot(train$Revenue, pred1)
+
+
+
+Residual Vs Fit Plot
+
+plot(pred1, resid1, main = "Model1")+abline(h = 0, col = "red")
+
+
+Testing Normality of Residuals
+
+
+#testing for normality
+qqnorm(resid1)
+hist(resid1)
+
+Problems with this plot
+-Unequal Variance
+-Outliers
+-residuals are not normal
+-some sort of linear trend is still there
+
+Using log transformations of Budget to fix some of these problems
+
+
+
+# removing missing values in revenue
+
+train =train[train$Revenue > 0,]
+test = test[test$Revenue > 0,]
+
+
+model2 = lm(Revenue ~ log(Budget)+category+duration+rating+C_Director+C_Actor+O_Actor, data = train)
+summary(model2)
+
+pred2 = predict(model2, train)
+resid2 = train$Revenue - pred2
+res = resid(model2)
+
+
+residual vs fit plot
+
+
+plot(pred2, resid2, main = "Model 2: Log of Budget")+abline(h = 0, col = "red")
+
+
+Testing for normality
+
+
+
+qqnorm(resid2)
+
+
+Residuals vs predictor plots
+
+
+plot(train$Budget, resid2)
+plot(train$duration, resid2)
+plot(train$C_Actor, resid2)
+
+
+Problems with this model
+- Problem of unequal variance persists
+- Ouliers
+
+
+Using transforming both x and y variables to fix unequal variance
+
+
+model3 = lm(log(Revenue) ~ log(Budget)+category+duration+rating+C_Director+C_Actor+O_Actor, data = train)
+summary(model3)
+
+
+pred3 = predict(model3, train)
+resid3 = train$Revenue - exp(pred3)
+res = resid(model3)
+res3 = train$Revenue - pred3
+
+
+
+
+
+residual vs fit plot
+
+
+plot(pred3, resid3, main = "Model 3: Log Transform of both")+abline(h = 0, col = "red")
+
+
+testing for normality
+
+
+qqnorm(resid3)
+
+
+Residual Vs Predictor Plots
+
+plot(train$Budget, resid3, main = "Model 3")
+plot(train$duration, resid3, main = "Model 3")
+plot(train$C_Actor, resid3, main = "Model 3")
+
+
+
+check = cbind(train, exp(pred3))
+
+Outliers
+
+# removing the extreme values
+
+datanew = data[data$Revenue < 2000,]
+
+train = subset(datanew, year < 2010)
+test = subset(datanew, year >= 2010)
+
+model3 = lm(log(Revenue) ~ log(Budget)+category+duration+rating+C_Director+C_Actor+O_Actor, data = train)
+summary(model3)
+
+
+pred3 = predict(model3, train)
+resid3 = train$Revenue - exp(pred3)
+
+plot(pred3, resid3, main = "Model 3: Log Transform of both")+abline(h = 0, col = "red")
+
+
+model4 = lm(log(Revenue) ~ log(Budget)+category+duration+rating+C_Director+log(C_Actor)+O_Actor, data = train)
+
+
+
+Checking multicollinearity and VIF
+
+
+
+library(dplyr)
+datanum = data %>%
+  select(Revenue, Budget, duration, C_Actor, O_Actor)
+head(datanum)
+cor(na.omit(datanum))
+plot(datanum)
+
+vif(model3)
+
+Best Subset Selection
+
+library(leaps)
+
+modelsub = regsubsets(Revenue ~category+duration+rating+as.factor(C_Director)+C_Actor+O_Actor , data = data)
+summary(modelsub)
+summary(modelsub)$rsq
+summary(modelsub)$adjr2
+
