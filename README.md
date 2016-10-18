@@ -9,6 +9,7 @@ Walmart and Weather data - An interesting case study of how Walmart leverages we
 
 Dodgers and Bobblehead promotions - Strategy presentation on whether the Dodgers should use bobblehead promotions to fill up emptying stadiums
 
+Programmatic Advertising - A brief introduction of Programmatic Advertising as a use case for leveraging data to make better decisions in the advertising industry
 
 
 
@@ -21,7 +22,7 @@ Movie Revenue Prediction - Through this analysis, I examine the possibility of p
 # Miscellaneous
 Python Web Scraper - A scraper to pull metrics for counties in LA
 
-Python Collaborative Filtering - An example of a recommendation system algorithm that predicts which book a user is likely to be interested in based on previously rated books
+Python Collaborative Filtering - An example from my larger recommendation system project of a recommendation system algorithm that predicts which book a user is likely to be interested in based on previously rated books
 
 Exploring Olympics Data - One of my first analysis and visualizations, where I derive insights from 7 years of data from the Olympics games to derive insights like European and North American countries have a greater number of older athletes winning medals. We can explore the factors like healthcare, diet, physical traits of athletes from different nations as well as nature of sports they contest in to understand why older athletes in some countries perform better than others
 
