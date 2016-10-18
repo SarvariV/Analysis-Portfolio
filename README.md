@@ -19,4 +19,6 @@ Movie Revenue Prediction - Through this analysis, I examine the possibility of p
 
 
 # Miscellaneous
+Python Web Scraper - A scraper to pull metrics for counties in LA
+Python Collaborative Filter
 
