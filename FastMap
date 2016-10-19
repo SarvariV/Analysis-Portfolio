@@ -1,0 +1,87 @@
+
+# -*- coding: utf-8 -*-
+
+import sys
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+import pandas as pd
+
+
+
+data = pd.read_csv(sys.argv[1], sep = '\t', header = None, names = ['obj1', 'obj2', 'dist'])
+
+labels =np.loadtxt(sys.argv[2],dtype='string')
+
+def findMaxDist(objects, data):
+    obj1 = random.choice(objects)
+    maxdist = 0
+    count = 0
+    while True:
+        maxdist = 0
+        for ix, row in data.iterrows():
+            if row[0] == obj1 or row[1] == obj1:
+                if row[2] > maxdist:
+                    maxdist = row[2]
+                    if row[0] == obj1:
+                        obj2 = row[1] 
+                    else:
+                        obj2 = row[0]
+        if count == 5:
+            break
+        count = count + 1
+        obj1 = obj2
+    return obj1,obj2,maxdist
+
+
+def fastMap(data, objects, obj1, obj2, maxdist):
+
+    d_ab = maxdist
+    x = {}
+    
+    for o_i in objects:
+        d_a = 0
+        d_b = d_ab
+
+        if o_i == obj1:
+            x[o_i] = d_a
+
+        elif o_i == obj2:
+            x[o_i] = d_b
+
+        else:
+            for ix, row in data.iterrows():
+                if ((row[0] == obj1 and row[1] == o_i) or (row[1] == obj1 and row[0] == o_i)):
+                    d_a = row[2]
+                if ((row[0] == obj2 and row[1] == o_i) or (row[1] == obj2 and row[0] == o_i)):
+                    d_b = row[2]       
+            x[o_i] = ((np.square(d_a) + np.square(d_ab) - np.square(d_b))/(2 * d_ab))
+
+               
+    return x
+
+results=[]
+for i in range(0,2):
+    objects = np.unique(data[['obj1', 'obj2']])
+    o1, o2, dist = findMaxDist(objects, data)
+    x = fastMap(data,objects,o1,o2,dist)
+    
+    results.append(x.values())
+  
+    for i,row in data.iterrows():
+        data.ix[i]['dist'] = np.sqrt(np.square(row[2]) - np.square(x[row[0]] - x[row[1]]))
+        #print data.ix[i]['dist']
+
+print np.array(results).T
+
+
+fig, ax = plt.subplots()
+ax.scatter(results[0],results[1])
+
+for i, txt in enumerate(labels):
+    ax.annotate(txt, (results[0][i],results[1][i]))
+plt.show()
+
+
+        
+       
