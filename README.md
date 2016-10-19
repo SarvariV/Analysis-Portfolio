@@ -19,7 +19,7 @@ Forecasting School Budgets - Schools are typically paid, and hence determine the
 Movie Revenue Prediction - Through this analysis, I examine the possibility of predicting movie grosses through generally available information from websites like IMDB. Particularly, predictions prior to a movie's release in order to influence pre-production decisions. 
 
 
-# Algorithms
+# Algorithms in Python
 
 Decision Tree - Implementation of the Decision Tree algorithm
 
