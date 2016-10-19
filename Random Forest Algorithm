@@ -1,0 +1,116 @@
+import pandas as pd
+import math
+import sys
+from collections import Counter
+import numpy as np
+
+class decisionnode:
+    def __init__(self,root_node = None, tree_dict = None, leaf_label = None):
+        self.root_node = root_node
+        self.tree_dict = tree_dict
+        self.leaf_label = leaf_label
+
+## Helper functions
+
+def y_count(df,target):
+    y = 0.0
+    for row in df[target]:
+        if row == 'Yes':
+            y = y + 1         
+    return float(y)/df.shape[0]
+            
+def majority_class(df,target):
+    majority = Counter(df[target].tolist())
+    print '                   '+ str(max(majority, key = majority.get))
+    return max(majority, key = majority.get)
+       
+def entropy(df,target):
+    ent = 0.0
+    p = y_count(df,target)
+    if p == 0 or p == 1:
+        return 0
+    else:  
+        ent = -p * math.log(p,2) - (1-p) * math.log((1-p),2)
+        return ent
+
+    
+## Tree Building
+
+def decision_tree(df,target,min_leaf_size = 1, stage = 0):
+    branch_dict = {}
+    for col in df.columns.values[:-1]:
+        branch_dict[col] = np.unique(df[col]).tolist()      
+    tree = generate_tree(df,target,branch_dict,min_leaf_size,stage = 0)
+    return tree
+    
+def generate_tree(df,target,branch_dict,min_leaf_size =1, stage = 0):
+    entropy_before_split = entropy(df,target)
+    max_gain = 0.0
+    td = {}
+    
+    # finds best split attribute 
+    for col in df.columns.values[:-1]:
+        levels = np.unique(df[col])
+        entropy_after_split = 0.0
+        for level in levels:
+            n = float(len(df[df[col] == level]))/len(df)
+            entropy_after_split = entropy_after_split + n *(entropy(df[df[col] == level],target))   
+        gain = entropy_before_split - entropy_after_split
+        if gain > max_gain:
+            max_gain = gain
+            split_attribute = col
+            
+    # checks for stopping criteria and returns leaf label
+    if max_gain <= 0:
+        return decisionnode(None, None, leaf_label = majority_class(df,target))
+    
+     
+    # for each branch of split attribute, builds tree recursively
+    split_branches = np.unique(df[split_attribute]).tolist()
+    for branch in branch_dict[split_attribute]:
+        print 'Level '+str(stage)+': '+str(split_attribute)           
+        print '          '+str(branch)+'?'
+        # returns label of parent if branch is not present in chid dataset
+        if branch in split_branches:
+            td[branch] = generate_tree(df[df[split_attribute] == branch],target,branch_dict,stage = stage + 1)
+        else:
+            td[branch] = majority_class(df,target)
+    return decisionnode(root_node = split_attribute, tree_dict = td)
+
+
+## predicting results
+
+def predict(tree_node,test):
+    result = []
+    for i, r in test.iterrows():
+        obs=test.ix[i:i]
+        label = get_label(tree_node, obs)
+        result.append(label)
+    return result
+
+def get_label(tree_node, obs):
+    if tree_node.root_node == None:
+        return tree_node.leaf_label
+    else:
+        branch = obs[tree_node.root_node]
+        next_tree_node = tree_node.tree_dict[branch.values[0]]
+        return get_label(next_tree_node, obs)
+            
+
+def main():
+    filename=sys.argv[1]
+    testfilename=sys.argv[2]
+
+    data=pd.read_csv(filename)
+    print data
+
+    target = data.columns.values[-1]
+    
+    testdata = pd.read_csv(testfilename)
+    
+    tree = decision_tree(data,target)
+
+    print (predict(tree,testdata))
+
+if __name__ == "__main__":
+    main()
