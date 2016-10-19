@@ -1,0 +1,120 @@
+import pandas as pd
+import collections
+import math
+from random import sample
+import numpy as np
+from scipy.stats import multivariate_normal
+import sys
+
+
+#read data
+filename = sys.argv[1]
+data = pd.read_csv(filename, header = None, names = ['col1', 'col2'])
+
+
+
+#function declarations
+# returns parameters of initial clusters
+def get_initial_parameters(data,normalizer):
+    a = np.array(data.transpose())
+    mean = np.mean(a, axis = 1)
+    cov = np.cov(a)
+    amp = len(data)/float(normalizer)
+    return mean,cov,amp
+
+#returns ric of every data point
+def get_ric(data,m1,cov1,a1,m2,cov2,a2,m3,cov3,a3):
+    ric_list = []
+    for i in range(len(data)):
+        p_1 = (a1 * multivariate_normal.pdf(data.ix[i], mean= m1, cov= cov1))
+        p_2 = (a2 * multivariate_normal.pdf(data.ix[i], mean= m2, cov= cov2))
+        p_3 = (a3 * multivariate_normal.pdf(data.ix[i], mean= m3, cov= cov3))
+        total = p_1 + p_2 + p_3
+        ric_1 = p_1/total
+        ric_2 = p_2/total
+        ric_3 = p_3/total
+        ric_list.append([ric_1,ric_2,ric_3])   
+    return ric_list
+
+# returns weighted parameters of clusters
+def get_new_parameters(data, ric_list, cluster_index):
+    dim = data.shape[1]
+    weighted_mean_num = np.zeros(dim)
+    normalizing_den = 0.0
+    weighted_cov_num = np.zeros((dim,dim))
+ 
+    # mean calculation
+    for i in range(len(data)):
+        weighted_mean_num = weighted_mean_num + (np.array(data.ix[i])*ric_list[i][cluster_index])
+        normalizing_den = normalizing_den + (ric_list[i][cluster_index])
+    mu = weighted_mean_num/normalizing_den
+    
+    # covariance calculation
+    for i in range(len(data)):   
+        x = np.array(data.ix[i])
+        a = x - mu
+        a = a.reshape(1,2)
+        b = a.reshape(2,1)
+        weighted_cov_num = weighted_cov_num + (ric_list[i][cluster_index]*np.dot(b,a))
+    cov = weighted_cov_num/normalizing_den
+    
+    # amplitude calculation
+    amp = normalizing_den/150
+    return mu, cov, amp
+        
+
+    
+# GMM Algorithm
+# random initialization of three clusters
+l = len(data)
+f = l/2
+indices = sample(range(l),f)
+sample_1 = data.ix[indices].reset_index(drop = True)
+next_sample = data.drop(indices).reset_index(drop = True)
+l = len(next_sample)
+f = l/2
+indices = sample(range(l),f)
+sample_2 = next_sample.ix[indices].reset_index(drop = True)
+sample_3 = next_sample.drop(indices).reset_index(drop = True)
+
+# get initial cluster parameters
+m1, cov1, a1 = get_initial_parameters(sample_1,len(data))
+m2, cov2, a2 = get_initial_parameters(sample_2,len(data))
+m3, cov3, a3 = get_initial_parameters(sample_3,len(data))
+
+# get ric of data points 
+ric_list = get_ric(data,m1,cov1,a1,m2,cov2,a3,m3,cov3,a3)
+
+# get new cluster parameters
+new_m1,new_cov1, new_a1 = get_new_parameters(data, ric_list, 0)
+new_m2, new_cov2, new_a2 = get_new_parameters(data, ric_list, 1)
+new_m3, new_cov3, new_a3 = get_new_parameters(data, ric_list, 2)
+
+
+while (abs(a1-new_a1) > 0.00001) and (abs(a2-new_a2) > 0.00001) and (abs(a3-new_a3) > 0.00001):
+    ric_list = get_ric(data,new_m1, new_cov1,new_a1,new_m2, new_cov2,new_a2, new_m3, new_cov3,new_a3)
+    m1, cov1,a1 = new_m1, new_cov1, new_a1
+    m2, cov2,a2 = new_m2, new_cov2, new_a2
+    m3, cov3,a3 = new_m3, new_cov3, new_a3
+    new_m1,new_cov1, new_a1 = get_new_parameters(data, ric_list, 0)
+    new_m2, new_cov2, new_a2 = get_new_parameters(data, ric_list, 1)
+    new_m3, new_cov3, new_a3 = get_new_parameters(data, ric_list, 2)
+    
+    
+Means = [new_m1, new_m2, new_m3]
+Centroids = [new_cov1, new_cov2, new_cov3]
+Amplitudes = [new_a1, new_a2, new_a3]
+
+
+print "Means:"
+print Means
+print
+print "Centroids:"
+print Centroids
+print
+print "Amplitudes:"
+print Amplitudes
+print
+     
+        
+        
