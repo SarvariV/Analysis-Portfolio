@@ -13,10 +13,20 @@ Programmatic Advertising - A brief introduction of Programmatic Advertising as a
 
 
 
-# Machine Learning
+# Machine Learning Projects
 Forecasting School Budgets - Schools are typically paid, and hence determine their budgets, based on the attendance rate of their students. To accurately forecast yearly budgets it would be beneficial if there were a way to determine if there is a relationship between student demographics and expected absences. Models used - elastic net regression, partial least squares, random forest and SVM
 
 Movie Revenue Prediction - Through this analysis, I examine the possibility of predicting movie grosses through generally available information from websites like IMDB. Particularly, predictions prior to a movie's release in order to influence pre-production decisions. 
+
+
+# Algorithms
+
+Decision Tree - Implementation of the Decision Tree algorithm
+
+Gaussian Mixture Models - Implementation of the GMM Clustering Algorithm
+
+FastMap - Implementation of the FastMap Algorithm
+
 
 
 # Miscellaneous
